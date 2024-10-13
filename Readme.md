@@ -40,6 +40,10 @@ python3 -m venv venv
 source venv/bin/activate  # On macOS/Linux
 venv\Scripts\activate     # On Windows
 ```
+or this in windows
+```bash
+python -m venv venv
+```
 
 #### 3. Install the dependencies
 
@@ -66,6 +70,10 @@ Apply the database migrations:
 
 ```bash
 python3 manage.py migrate
+```
+For windows 
+```bash
+python manage.py migrate
 ```
 
 #### 6. Create a superuser (optional)
