@@ -8,6 +8,8 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.utils.translation import gettext as _
+
 from .serializers import UserRegistrationSerializer, UserSerializer
 from .models import User
 
