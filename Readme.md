@@ -61,6 +61,7 @@ Create a `.env` file in the root directory of the project and update the necessa
 # Django Settings
 DJANGO_DEBUG=True  # Set to False in production
 DJANGO_SECRET_KEY=my-secret-key  # Replace with your actual secret key
+ALLOWED_HOSTS=localhost,127.0.0.1,yourdomain.com  # Comma-separated list of allowed hosts
 
 # AWS S3 Settings
 AWS_ACCESS_KEY_ID=YOURKEY  # Replace with your AWS Access Key ID
