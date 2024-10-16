@@ -5,7 +5,7 @@ This is the backend API built using Django for the **Vivaldi20** project. It pro
 ## Features
 
 - Django REST Framework for API endpoints
-- JWT Authentication for secure access
+- Token Authentication for secure access
 - User management
 
 ## Getting Started
@@ -55,13 +55,19 @@ pip install -r requirements.txt
 
 #### 4. Set up environment variables
 
-Create a `.env` file in the root directory of the project and add the necessary environment variables, such as database credentials and secret keys.
-
-Example `.env` file:
+Create a `.env` file in the root directory of the project and update the necessary environment variables, such as credentials and secret keys. Below are the environment variables used in this project. Copy them to your `.env` file and update the values accordingly:
 
 ```bash
-DJANGO_DEBUG=True
-DJANGO_SECRET_KEY=my-secret-key
+# Django Settings
+DJANGO_DEBUG=True  # Set to False in production
+DJANGO_SECRET_KEY=my-secret-key  # Replace with your actual secret key
+ALLOWED_HOSTS=localhost,127.0.0.1,yourdomain.com  # Comma-separated list of allowed hosts
+
+# AWS S3 Settings
+AWS_ACCESS_KEY_ID=YOURKEY  # Replace with your AWS Access Key ID
+AWS_SECRET_ACCESS_KEY=your-secret-access-key  # Replace with your AWS Secret Access Key
+AWS_STORAGE_BUCKET_NAME=your-bucket-name  # Replace with your S3 bucket name
+AWS_S3_REGION_NAME=your-region-name  # Optional: replace with your S3 region, e.g., us-east-1
 ```
 
 #### 5. Set up the database

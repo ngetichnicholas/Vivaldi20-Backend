@@ -272,6 +272,7 @@ dump.rdb
 
 ### Project template
 media/
+*.zip
 
 .pytest_cache/
 .ipython/
