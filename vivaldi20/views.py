@@ -1,3 +1,7 @@
+import os
+from django.utils import timezone
+from django.core.files.storage import default_storage
+from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -20,41 +24,63 @@ def user_registration_view(request):
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({"data": {"message": "User account created successfully"}}, status=status.HTTP_201_CREATED)
+        return Response({"data": {"message": "User account created successfully."}}, status=status.HTTP_201_CREATED)
     return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 # Login View (Function Based)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    serializer = ObtainAuthToken.serializer_class(data=request.data)
-    serializer.is_valid(raise_exception=True)
+    # Extract username and password from request data
+    username = request.data.get('username')
+    password = request.data.get('password')
 
-    username = serializer.validated_data['username']
-    password = serializer.validated_data['password']
-
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
+    # Validate that username and password are provided
+    if not username:
         return Response({
             "data": {
-                "message": "User with that Email or Phone does not exist.",
+                "message": "Username is required.",
                 "errors": {
-                    "username": ["User with that Email or Phone does not exist."]
+                    "username": ["This field is required."]
                 }
             }
-        }, status=422)
+        }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    if not user.check_password(password):
+    if not password:
         return Response({
             "data": {
-                "message": "The password entered is invalid.",
+                "message": "Password is required.",
                 "errors": {
-                    "password": ["The password entered is invalid."]
+                    "password": ["This field is required."]
                 }
             }
-        }, status=422)
+        }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
+    # Authenticate the user
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        # If user is not found or password is incorrect
+        if User.objects.filter(username=username).exists():
+            return Response({
+                "data": {
+                    "message": "The password entered is invalid.",
+                    "errors": {
+                        "password": ["The password entered is invalid."]
+                    }
+                }
+            }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        else:
+            return Response({
+                "data": {
+                    "message": "User with that username does not exist.",
+                    "errors": {
+                        "username": ["User with that username does not exist."]
+                    }
+                }
+            }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    # If the user is authenticated, get or create the token
     token, created = Token.objects.get_or_create(user=user)
 
     return Response({
@@ -99,7 +125,7 @@ def member_detail_view(request, pk):
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
-        return Response({"message": "Member not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message": "Member not found."}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = UserSerializer(user)
@@ -112,15 +138,23 @@ def member_detail_view(request, pk):
             serializer.save()
             return Response({
                 "data": {
-                    "message": "Member updated successfully",
+                    "message": "Member updated successfully.",
                     "member": serializer.data
                 }
             })
         return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
+        # Delete the existing profile photo if it exists before deleting the user
+        if user.profile_photo:
+            try:
+                default_storage.delete(user.profile_photo.name)
+            except Exception as e:
+                return Response({"data": {"message": "Error deleting profile photo"}}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Now delete the user
         user.delete()
-        return Response({"data": {"message": "User deleted successfully"}})
+        return Response({"data": {"message": "User deleted successfully."}})
 
 # Update Profile Photo View (Function Based)
 @api_view(['PATCH'])
@@ -129,15 +163,37 @@ def update_profile_photo_view(request, id):
     try:
         user = User.objects.get(id=id)
     except User.DoesNotExist:
-        return Response({"data": {"message": "User not found"}}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"data": {"message": "User not found."}}, status=status.HTTP_404_NOT_FOUND)
 
     if 'profile_photo' in request.FILES:
-        user.profile_photo = request.FILES['profile_photo']
+        # Delete the existing profile photo if it exists using the storage backend
+        if user.profile_photo:
+            try:
+                # Check if the file exists and delete it using the storage backend's name
+                default_storage.delete(user.profile_photo.name)
+            except Exception as e:
+                return Response({"data": {"message": "Error updating profile photo"}}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Get the uploaded file
+        uploaded_file = request.FILES['profile_photo']
+
+        # Generate the new file name using user's name and current time
+        current_time = timezone.now().strftime("%Y%m%d%H%M%S")
+        user_name = user.username.replace(" ", "_")  # or use another unique field like email
+        file_extension = os.path.splitext(uploaded_file.name)[1]
+        new_file_name = f"{user_name}_profile_{current_time}{file_extension}"
+
+        # Save the new file with the generated name
+        user.profile_photo.save(new_file_name, uploaded_file)
+
+        # Save the user object with the new profile photo
         user.save()
+
+        # Serialize the user data and return the response
         serializer = UserSerializer(user)
         response_data = {
             "data": {
-                "message": "Profile photo updated successfully",
+                "message": "Profile photo updated successfully.",
                 "member": serializer.data  # This contains the updated member details
             }
         }
