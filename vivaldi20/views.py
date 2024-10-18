@@ -1,6 +1,7 @@
 import os
 from django.utils import timezone
 from django.core.files.storage import default_storage
+from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -30,35 +31,56 @@ def user_registration_view(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    serializer = ObtainAuthToken.serializer_class(data=request.data)
-    serializer.is_valid(raise_exception=True)
+    # Extract username and password from request data
+    username = request.data.get('username')
+    password = request.data.get('password')
 
-    username = serializer.validated_data['username']
-    password = serializer.validated_data['password']
-
-    try:
-        user = User.objects.get(username=username)
-    except User.DoesNotExist:
+    # Validate that username and password are provided
+    if not username:
         return Response({
             "data": {
-                "message": "User with that username does not exist.",
+                "message": "Username is required.",
                 "errors": {
-                    "username": ["User with that username does not exist."]
+                    "username": ["This field is required."]
                 }
             }
         }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    # Check password validity
-    if not user.check_password(password):
+    if not password:
         return Response({
             "data": {
-                "message": "The password entered is invalid.",
+                "message": "Password is required.",
                 "errors": {
-                    "password": ["The password entered is invalid."]
+                    "password": ["This field is required."]
                 }
             }
         }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
+    # Authenticate the user
+    user = authenticate(username=username, password=password)
+
+    if user is None:
+        # If user is not found or password is incorrect
+        if User.objects.filter(username=username).exists():
+            return Response({
+                "data": {
+                    "message": "The password entered is invalid.",
+                    "errors": {
+                        "password": ["The password entered is invalid."]
+                    }
+                }
+            }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        else:
+            return Response({
+                "data": {
+                    "message": "User with that username does not exist.",
+                    "errors": {
+                        "username": ["User with that username does not exist."]
+                    }
+                }
+            }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    # If the user is authenticated, get or create the token
     token, created = Token.objects.get_or_create(user=user)
 
     return Response({
