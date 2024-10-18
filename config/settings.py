@@ -149,6 +149,7 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FormParser',
         'rest_framework.parsers.JSONParser',
     ],
+    'EXCEPTION_HANDLER': 'vivaldi20.utils.custom_exception_handler',
 }
 
 
