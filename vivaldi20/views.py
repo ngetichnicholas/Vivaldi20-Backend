@@ -20,7 +20,7 @@ def user_registration_view(request):
     serializer = UserRegistrationSerializer(data=request.data)
     if serializer.is_valid():
         serializer.save()
-        return Response({"data": {"message": "User account created successfully"}}, status=status.HTTP_201_CREATED)
+        return Response({"data": {"message": "User account created successfully."}}, status=status.HTTP_201_CREATED)
     return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 # Login View (Function Based)
@@ -38,9 +38,9 @@ def login_view(request):
     except User.DoesNotExist:
         return Response({
             "data": {
-                "message": "User with that Email or Phone does not exist.",
+                "message": "User with that username does not exist.",
                 "errors": {
-                    "username": ["User with that Email or Phone does not exist."]
+                    "username": ["User with that username does not exist."]
                 }
             }
         }, status=422)
@@ -99,7 +99,7 @@ def member_detail_view(request, pk):
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
-        return Response({"message": "Member not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"message": "Member not found."}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         serializer = UserSerializer(user)
@@ -112,7 +112,7 @@ def member_detail_view(request, pk):
             serializer.save()
             return Response({
                 "data": {
-                    "message": "Member updated successfully",
+                    "message": "Member updated successfully.",
                     "member": serializer.data
                 }
             })
@@ -120,7 +120,7 @@ def member_detail_view(request, pk):
 
     elif request.method == 'DELETE':
         user.delete()
-        return Response({"data": {"message": "User deleted successfully"}})
+        return Response({"data": {"message": "User deleted successfully."}})
 
 # Update Profile Photo View (Function Based)
 @api_view(['PATCH'])
@@ -129,7 +129,7 @@ def update_profile_photo_view(request, id):
     try:
         user = User.objects.get(id=id)
     except User.DoesNotExist:
-        return Response({"data": {"message": "User not found"}}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"data": {"message": "User not found."}}, status=status.HTTP_404_NOT_FOUND)
 
     if 'profile_photo' in request.FILES:
         user.profile_photo = request.FILES['profile_photo']
@@ -137,7 +137,7 @@ def update_profile_photo_view(request, id):
         serializer = UserSerializer(user)
         response_data = {
             "data": {
-                "message": "Profile photo updated successfully",
+                "message": "Profile photo updated successfully.",
                 "member": serializer.data  # This contains the updated member details
             }
         }
