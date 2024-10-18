@@ -64,7 +64,7 @@ def login_view(request):
                 "name": user.first_name,
                 "username": user.username,
                 "profession": user.profession,
-                "profile_photo_url": user.profile_photo.url if user.profile_photo else "https://ui-avatars.com/api/?name={}&color=7F9CF5&background=EBF4FF".format(user.first_name)
+                "profile_photo_url": user.profile_photo.url if user.profile_photo else None
             },
             "token": token.key
         }
