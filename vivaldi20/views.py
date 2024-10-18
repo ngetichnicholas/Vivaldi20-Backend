@@ -141,6 +141,6 @@ def update_profile_photo_view(request, id):
                 "member": serializer.data  # This contains the updated member details
             }
         }
-        return Response({"data": response_data}, status=status.HTTP_200_OK)
+        return Response(response_data, status=status.HTTP_200_OK)
 
     return Response({"data": {"message": "No photo provided."}}, status=status.HTTP_400_BAD_REQUEST)
