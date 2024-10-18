@@ -1,3 +1,6 @@
+import os
+from django.utils import timezone
+from django.core.files.storage import default_storage
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -43,8 +46,9 @@ def login_view(request):
                     "username": ["User with that username does not exist."]
                 }
             }
-        }, status=422)
+        }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
+    # Check password validity
     if not user.check_password(password):
         return Response({
             "data": {
@@ -53,7 +57,7 @@ def login_view(request):
                     "password": ["The password entered is invalid."]
                 }
             }
-        }, status=422)
+        }, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     token, created = Token.objects.get_or_create(user=user)
 
@@ -119,6 +123,14 @@ def member_detail_view(request, pk):
         return Response({"data": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
+        # Delete the existing profile photo if it exists before deleting the user
+        if user.profile_photo:
+            try:
+                default_storage.delete(user.profile_photo.name)
+            except Exception as e:
+                return Response({"data": {"message": "Error deleting profile photo"}}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Now delete the user
         user.delete()
         return Response({"data": {"message": "User deleted successfully."}})
 
@@ -132,8 +144,30 @@ def update_profile_photo_view(request, id):
         return Response({"data": {"message": "User not found."}}, status=status.HTTP_404_NOT_FOUND)
 
     if 'profile_photo' in request.FILES:
-        user.profile_photo = request.FILES['profile_photo']
+        # Delete the existing profile photo if it exists using the storage backend
+        if user.profile_photo:
+            try:
+                # Check if the file exists and delete it using the storage backend's name
+                default_storage.delete(user.profile_photo.name)
+            except Exception as e:
+                return Response({"data": {"message": "Error updating profile photo"}}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        # Get the uploaded file
+        uploaded_file = request.FILES['profile_photo']
+
+        # Generate the new file name using user's name and current time
+        current_time = timezone.now().strftime("%Y%m%d%H%M%S")
+        user_name = user.username.replace(" ", "_")  # or use another unique field like email
+        file_extension = os.path.splitext(uploaded_file.name)[1]
+        new_file_name = f"{user_name}_profile_{current_time}{file_extension}"
+
+        # Save the new file with the generated name
+        user.profile_photo.save(new_file_name, uploaded_file)
+
+        # Save the user object with the new profile photo
         user.save()
+
+        # Serialize the user data and return the response
         serializer = UserSerializer(user)
         response_data = {
             "data": {
