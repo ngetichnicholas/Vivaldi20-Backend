@@ -19,6 +19,8 @@ Ensure you have the following installed on your system:
 - Python 3.8 or higher
 - Git
 - Virtual environment package (`python3 -m venv`)
+- MySQL server
+
 
 ### Installation
 
@@ -53,7 +55,9 @@ Install the required packages using `pip`:
 pip install -r requirements.txt
 ```
 
-#### 4. Set up environment variables
+#### 4. **Set up MySQL database**: Ensure you have a MySQL database created and user access granted.
+
+#### 5. Set up environment variables
 
 Create a `.env` file in the root directory of the project and update the necessary environment variables, such as credentials and secret keys. Below are the environment variables used in this project. Copy them to your `.env` file and update the values accordingly:
 
@@ -63,6 +67,13 @@ DJANGO_DEBUG=True  # Set to False in production
 DJANGO_SECRET_KEY=my-secret-key  # Replace with your actual secret key
 ALLOWED_HOSTS=localhost,127.0.0.1,yourdomain.com  # Comma-separated list of allowed hosts
 
+# MySQL Database Settings
+MYSQL_DATABASE_NAME=your_database_name
+MYSQL_USER=your_user
+MYSQL_PASSWORD=your_password
+MYSQL_HOST=localhost  # or the IP address of your database server
+MYSQL_PORT=3306  # Default MySQL port
+
 # AWS S3 Settings
 AWS_ACCESS_KEY_ID=YOURKEY  # Replace with your AWS Access Key ID
 AWS_SECRET_ACCESS_KEY=your-secret-access-key  # Replace with your AWS Secret Access Key
@@ -70,7 +81,7 @@ AWS_STORAGE_BUCKET_NAME=your-bucket-name  # Replace with your S3 bucket name
 AWS_S3_REGION_NAME=your-region-name  # Optional: replace with your S3 region, e.g., us-east-1
 ```
 
-#### 5. Set up the database
+#### 6. Set up the database
 
 Apply the database migrations:
 
@@ -82,7 +93,7 @@ For windows
 python manage.py migrate
 ```
 
-#### 6. Create a superuser (optional)
+#### 7. Create a superuser (optional)
 
 To create a superuser for accessing the Django admin panel, run:
 
@@ -90,7 +101,7 @@ To create a superuser for accessing the Django admin panel, run:
 python3 manage.py createsuperuser
 ```
 
-#### 7. Run the development server
+#### 8. Run the development server
 
 Now, you can run the Django development server:
 

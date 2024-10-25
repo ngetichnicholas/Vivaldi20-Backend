@@ -6,12 +6,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.authtoken.views import ObtainAuthToken
 
 from rest_framework.authtoken.models import Token
-from rest_framework.exceptions import AuthenticationFailed
 from drf_yasg.utils import swagger_auto_schema
-from django.utils.translation import gettext as _
 from .serializers import UserRegistrationSerializer, UserSerializer
 from .models import User
 
@@ -154,8 +151,8 @@ def member_detail_view(request, pk):
 
         # Now delete the user
         user.delete()
-        return Response({"data": {"message": "User deleted successfully."}})
-
+        return Response({"data": {"message": "User deleted successfully."}}, status=status.HTTP_200_OK)
+    
 # Update Profile Photo View (Function Based)
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
